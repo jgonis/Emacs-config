@@ -151,4 +151,6 @@
 (add-hook 'scheme-mode-hook #'rainbow-delimiters-mode)
 (add-hook 'clojure-mode-hook #'rainbow-delimiters-mode)
 (add-hook 'lisp-mode-hook #'rainbow-delimiters-mode)
-
+(global-unset-key (kbd "\M-z") )
+(global-set-key (kbd"M-z") 'undo)
+(color-theme-tomorrow-night)
