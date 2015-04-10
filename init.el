@@ -147,3 +147,8 @@
  '(default ((t (:family "Ubuntu Mono" :foundry "outline" :slant normal :weight normal :height 120 :width normal)))))
 
 (windmove-default-keybindings)
+(setq magit-last-seen-setup-instructions "1.4.0")
+(add-hook 'scheme-mode-hook #'rainbow-delimiters-mode)
+(add-hook 'clojure-mode-hook #'rainbow-delimiters-mode)
+(add-hook 'lisp-mode-hook #'rainbow-delimiters-mode)
+
