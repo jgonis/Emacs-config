@@ -137,7 +137,6 @@
  ;; If there is more than one, they won't work right.
  '(blink-cursor-mode nil)
  '(coffee-tab-width 2)
- '(scheme-program-name "java -jar \"D://kawa//kawa//kawa-2.0.1.jar\" --console")
  '(show-paren-mode t))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
@@ -154,3 +153,11 @@
 (global-unset-key (kbd "\M-z") )
 (global-set-key (kbd"M-z") 'undo)
 (color-theme-tomorrow-night)
+(cond
+ ((string-equal system-type "gnu/linux")
+  (progn
+    (setq scheme-program-name "java -jar /home/jgonis/Code/kawaScheme/kawa/kawa-2.0.1.jar -s")))
+ ((string-equal system-type "windows-nt")
+  (progn
+    (setq scheme-program-name "java -jar \"D://kawa//kawa//kawa-2.0.1.jar\" --console")))
+ )
