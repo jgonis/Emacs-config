@@ -161,3 +161,4 @@
   (progn
     (setq scheme-program-name "java -jar \"D://kawa//kawa//kawa-2.0.1.jar\" --console")))
  )
+(tool-bar-mode -1)
