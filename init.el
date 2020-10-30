@@ -1,164 +1,136 @@
-;;;;
-;; Packages
-;;;;
+(setq inhibit-startup-message t)
+(set-fringe-mode 10)
+(tool-bar-mode -1)
+(scroll-bar-mode -1)
+(setq visible-bell t)
+;;(set-face-attribute 'default nil :font "Latin Modern Mono" :height 136)
+(set-face-attribute 'default nil :font "Roboto Mono" :height 110)
+(when (fboundp 'windmove-default-keybindings)
+  (windmove-default-keybindings))
 
-;; Define package repositories
+;;Initialize package sources
 (require 'package)
-(add-to-list 'package-archives
-             '("marmalade" . "http://marmalade-repo.org/packages/") t)
-(add-to-list 'package-archives
-             '("tromey" . "http://tromey.com/elpa/") t)
-(add-to-list 'package-archives
-             '("melpa" . "http://melpa.milkbox.net/packages/") t)
+(setq package-archives '(("melpa" .
+			  "https://melpa.org/packages/")
+			 ("elpa" .
+			  "http://elpa.gnu.org/packages/")
+			 ("org" .
+			  "https://orgmode.org/elpa/")))
 
-;; (setq package-archives '(("gnu" . "http://elpa.gnu.org/packages/")
-;;                          ("marmalade" . "http://marmalade-repo.org/packages/")
-;;                          ("melpa" . "http://melpa-stable.milkbox.net/packages/")))
-
-
-;; Load and activate emacs packages. Do this first so that the
-;; packages are loaded before you start trying to modify them.
-;; This also sets the load path.
 (package-initialize)
-
-;; Download the ELPA archive description if needed.
-;; This informs Emacs about the latest versions of all packages, and
-;; makes them available for download.
-(when (not package-archive-contents)
+(unless package-archive-contents
   (package-refresh-contents))
 
-;; The packages you want installed. You can also install these
-;; manually with M-x package-install
-;; Add in your own as you wish:
-(defvar my-packages
-  '(;; makes handling lisp expressions much, much easier
-    ;; Cheatsheet: http://www.emacswiki.org/emacs/PareditCheatsheet
-    paredit
+;;Initialize use-package on non-linux platforms
+(unless (package-installed-p 'use-package)
+  (package-install 'use-package))
 
-    ;; key bindings and code colorization for Clojure
-    ;; https://github.com/clojure-emacs/clojure-mode
-    clojure-mode
+;;Bring in use-package and make sure it always tries to bring
+;;in the package specified by the use-package form.
+(require 'use-package)
+(setq use-package-always-ensure t)
 
-    ;; extra syntax highlighting for clojure
-    clojure-mode-extra-font-locking
+;;Turn on column numbering mode in the modeline
+(column-number-mode)
+;;Turn on line numbers globally
+(global-display-line-numbers-mode t)
+;;Turn off line numbers for modes where it doesn't make sense
+(dolist (mode '(org-mode-hook
+		term-mode-hook
+		eshell-mode-hook
+  (add-hook mode (lambda () (display-line-numbers-mode 0))))))
 
-    ;; integration with a Clojure REPL
-    ;; https://github.com/clojure-emacs/cider
-    cider
+;;Allow the diminish command in use-package to work
+(use-package diminish)
 
-    ;; allow ido usage in as many contexts as possible. see
-    ;; customizations/navigation.el line 23 for a description
-    ;; of ido
-    ido-ubiquitous
+;;Allow command logging to be installed and then turn it
+;;on everywhere
+(use-package  command-log-mode
+  :diminish)
+(global-command-log-mode)
 
-    ;; Enhances M-x to allow easier execution of commands. Provides
-    ;; a filterable list of possible commands in the minibuffer
-    ;; http://www.emacswiki.org/emacs/Smex
-    smex
+;;Ivy provides autocomplete
+(use-package ivy
+  :diminish
+  ;;Set bindings so we can navigate the buffer
+  ;;autocomplete list using home row keys
+  :bind (("C-s" . swiper)
+	 :map ivy-minibuffer-map
+	 ("C-j" . ivy-next-line)
+	 ("C-k" . ivy-previous-line)
+	 :map ivy-switch-buffer-map
+	 ("C-k" . ivy-previous-line)
+	 ("C-d" . ivy-switch-buffer-kill))
+  :config
+  (ivy-mode 1))
 
-    ;; project navigation
-    projectile
+;;The doom-modeline package relies on icon fonts being
+;;installed which are included in this all-the-icons
+;;package. On a fresh install you also need to run
+;;M-x all-the-icons-install-fonts to get the icos
+;;fonts needed installed
+(use-package all-the-icons)
 
-    ;; colorful parenthesis matching
-    rainbow-delimiters
+;;Use a default configuration to get a more modern looking
+;;emacs modeline installed
+(use-package doom-modeline
+  :config
+  (doom-modeline-mode 1))
 
-    ;; edit html tags like sexps
-    tagedit
+(use-package doom-themes
+  :init (load-theme 'doom-opera t))
 
-    ;; git integration
-    magit))
+;Get multicolored parentheses and also make them match.
+(use-package rainbow-delimiters
+  :hook (prog-mode . rainbow-delimiters-mode))
+(show-paren-mode 1)
 
-;; On OS X, an Emacs instance started from the graphical user
-;; interface will have a different environment than a shell in a
-;; terminal window, because OS X does not run a shell during the
-;; login. Obviously this will lead to unexpected results when
-;; calling external utilities like make from Emacs.
-;; This library works around this problem by copying important
-;; environment variables from the user's shell.
-;; https://github.com/purcell/exec-path-from-shell
-(if (eq system-type 'darwin)
-    (add-to-list 'my-packages 'exec-path-from-shell))
+;;Pop up a minibuffer after you type in a key to show
+;;what key commands are associated with. Ie type C-x
+;;and which-key will show all the keys you could type
+;;after and what commands they will execute.
+(use-package which-key
+  :init (which-key-mode)
+  :diminish which-key-mode
+  :config (setq which-key-idle-delay 0.5))
 
-(dolist (p my-packages)
-  (when (not (package-installed-p p))
-    (package-install p)))
+;Have Richer autocomplete information
+(use-package ivy-rich
+  :init (ivy-rich-mode 1))
+
+;;Counsel is a set of enhanced commands for emacs
+(use-package counsel
+  :bind (("M-x" . counsel-M-x)
+	 ("C-M-j" . counsel-switch-buffer)
+	 ("C-x C-f" . counsel-find-file))
+  
+  :config
+  (setq ivy-initial-inputs-alist nil))
+
+;;Setup a better help system by rebinding the system
+;;describe commands to call the helpful equivalents.
+;;Customize counsel commands to delegate to the helpful
+;;commands so that you get the rich autocomplete of counsel
+;;and the good docs of helpful.
+(use-package helpful
+  :custom
+  (counsel-describe-function-function #'helpful-callable)
+  (counsel-describe-variable-function #'helpful-variable)
+  :bind
+  ([remap describe-function] . counsel-describe-function)
+  ([remap describe-command] . helpful-command)
+  ([remap describe-variable] . counsel-describe-variable)
+  ([remap describe-key] . helpful-key))
+
+(use-package general
+  :config
+  (general-create-definer jgon/leader-keys
+    :keymaps '(normal insert visual emacs)
+    :prefix ";"
+    :global-prefix "C-;")
+  (jgon/leader-keys
+    "t" '(ignore t :which-key "toggles")
+    "tt" '(counsel-load-theme :which-key "choose theme")))
 
 
-;; Place downloaded elisp files in ~/.emacs.d/vendor. You'll then be able
-;; to load them.
-;;
-;; For example, if you download yaml-mode.el to ~/.emacs.d/vendor,
-;; then you can add the following code to this file:
-;;
-;; (require 'yaml-mode)
-;; (add-to-list 'auto-mode-alist '("\\.yml$" . yaml-mode))
-;; 
-;; Adding this code will make Emacs enter yaml mode whenever you open
-;; a .yml file
-(add-to-list 'load-path "~/.emacs.d/vendor")
-
-
-;;;;
-;; Customization
-;;;;
-
-;; Add a directory to our load path so that when you `load` things
-;; below, Emacs knows where to look for the corresponding file.
-(add-to-list 'load-path "~/.emacs.d/customizations")
-
-;; Sets up exec-path-from-shell so that Emacs will use the correct
-;; environment variables
-(load "shell-integration.el")
-
-;; These customizations make it easier for you to navigate files,
-;; switch buffers, and choose options from the minibuffer.
-(load "navigation.el")
-
-;; These customizations change the way emacs looks and disable/enable
-;; some user interface elements
-(load "ui.el")
-
-;; These customizations make editing a bit nicer.
-(load "editing.el")
-
-;; Hard-to-categorize customizations
-(load "misc.el")
-
-;; For editing lisps
-(load "elisp-editing.el")
-
-;; Langauage-specific
-(load "setup-clojure.el")
-(load "setup-js.el")
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(blink-cursor-mode nil)
- '(coffee-tab-width 2)
- '(show-paren-mode t))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(default ((t (:family "Ubuntu Mono" :foundry "outline" :slant normal :weight normal :height 120 :width normal)))))
-
-(windmove-default-keybindings)
-(setq magit-last-seen-setup-instructions "1.4.0")
-(add-hook 'scheme-mode-hook #'rainbow-delimiters-mode)
-(add-hook 'clojure-mode-hook #'rainbow-delimiters-mode)
-(add-hook 'lisp-mode-hook #'rainbow-delimiters-mode)
-(global-unset-key (kbd "\M-z") )
-(global-set-key (kbd"M-z") 'undo)
-(color-theme-tomorrow-night)
-(cond
- ((string-equal system-type "gnu/linux")
-  (progn
-    (setq scheme-program-name "java -jar /home/jgonis/Code/kawaScheme/kawa/kawa-2.0.1.jar -s")))
- ((string-equal system-type "windows-nt")
-  (progn
-    (setq scheme-program-name "java -jar \"D://kawa//kawa//kawa-2.0.1.jar\" --console")))
- )
-(tool-bar-mode -1)
+  
