@@ -1,3 +1,4 @@
+;;Start of config
 (setq inhibit-startup-message t)
 (set-fringe-mode 10)
 (tool-bar-mode -1)
@@ -101,6 +102,7 @@
 ;;Counsel is a set of enhanced commands for emacs
 (use-package counsel
   :bind (("M-x" . counsel-M-x)
+	 ("C-M-l" . counsel-M-x)
 	 ("C-M-j" . counsel-switch-buffer)
 	 ("C-x C-f" . counsel-find-file))
   
@@ -122,15 +124,75 @@
   ([remap describe-variable] . counsel-describe-variable)
   ([remap describe-key] . helpful-key))
 
-(use-package general
-  :config
-  (general-create-definer jgon/leader-keys
-    :keymaps '(normal insert visual emacs)
-    :prefix ";"
-    :global-prefix "C-;")
-  (jgon/leader-keys
-    "t" '(ignore t :which-key "toggles")
-    "tt" '(counsel-load-theme :which-key "choose theme")))
+;;Package use to create general keybindings. I've chosed
+;;to set aside C-t as my own user defined keyspace, where
+;;I can place my own keybindings to various commands as
+;;I want.  The create-definer is what sets aside a specific
+;;key stroke as being the prefix leading into other keybindings
+(use-package general)
+(general-create-definer jgon/leader-keys
+  :prefix "C-;")
+(jgon/leader-keys
+  ;;"C-t" '(:ignore t :which-key "toggles")
+  "t" '(counsel-load-theme :which-key "choose theme"))
 
 
-  
+;;Projectile provides useful project management functionality
+;;for emacs, bind C-c p as a jumping off point to all the things
+;;it can do, and setup my ~/Code folder as the folder where I store
+;;all my coding projects.
+(use-package projectile
+  :diminish projectile-mode
+  :config (projectile-mode)
+  :custom ((projectile-completion-system 'ivy))
+  :bind-keymap ("C-c p" . projectile-command-map)
+  :init
+  (when (file-directory-p "~/Code")
+    (setq projectile-project-search-path '("~/Code"))))
+
+(use-package counsel-projectile
+  :config (counsel-projectile-mode))
+
+(use-package magit
+  :commands (magit-status magit-get-current-branch)
+  :custom
+  (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
+
+(use-package yasnippet)
+
+(use-package emaps)
+
+(use-package lsp-mode
+  :commands (lsp lsp-deferred)
+  :init (setq lsp-keymap-prefix "<C-return>")
+  (setq lsp-enable-snippet nil)
+  :config (lsp-enable-which-key-integration t))
+
+(use-package lsp-ui)
+
+(use-package company
+  :config (global-company-mode t)
+  (setq company-idle-delay 0))
+
+(use-package lispy
+  :hook ((emacs-lisp-mode . lispy-mode)
+         (scheme-mode . lispy-mode)))
+
+(use-package sly
+  :mode "\\.lisp\\'")
+
+(use-package slime
+  :disabled
+  :mode "\\.lisp\\'")
+
+;; Include .sld library definition files
+(use-package quack
+  :mode "\\.sld\\'")
+
+
+
+(use-package ccls
+  :hook ((c-mode c++-mode objc-mode cuda-mode) .
+         (lambda () (require 'ccls) (lsp)))
+  :config (setq ccls-executable "/home/jeff.gonis/Code/ccls/Release/ccls"))
+
