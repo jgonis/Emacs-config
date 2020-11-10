@@ -9,6 +9,17 @@
 (when (fboundp 'windmove-default-keybindings)
   (windmove-default-keybindings))
 
+;;Turn on column numbering mode in the modeline
+(column-number-mode)
+;;Turn on line numbers globally
+(global-display-line-numbers-mode t)
+;;Turn off line numbers for modes where it doesn't make sense
+(dolist (mode '(org-mode-hook
+		term-mode-hook
+		treemacs-mode-hook
+		eshell-mode-hook))
+  (add-hook mode (lambda () (display-line-numbers-mode 0))))
+
 ;;Initialize package sources
 (require 'package)
 (setq package-archives '(("melpa" .
@@ -31,20 +42,7 @@
 (require 'use-package)
 (setq use-package-always-ensure t)
 
-;;Turn on column numbering mode in the modeline
-(column-number-mode)
-;;Turn on line numbers globally
-(global-display-line-numbers-mode t)
-;;Turn off line numbers for modes where it doesn't make sense
-(dolist (mode '(org-mode-hook
-		term-mode-hook
-		eshell-mode-hook
-  (add-hook mode (lambda () (display-line-numbers-mode 0))))))
-
-;;Allow the diminish command in use-package to work
-(use-package diminish)
-
-;;Allow command logging to be installed and then turn it
+;;Allow command logging to be installed and then burn it
 ;;on everywhere
 (use-package  command-log-mode
   :diminish)
@@ -168,11 +166,23 @@
   (setq lsp-enable-snippet nil)
   :config (lsp-enable-which-key-integration t))
 
-(use-package lsp-ui)
+(use-package lsp-ui
+  :hook (lsp-mode . lsp-ui-mode)
+  :custom (lsp-ui-doc-position 'bottom))
+
+(use-package lsp-treemacs
+  :after lsp)
 
 (use-package company
+  :after lsp-mode
+  :hook (lsp-mode . company-mode)
   :config (global-company-mode t)
-  (setq company-idle-delay 0))
+  (setq company-idle-delay 1.5))
+
+(use-package company-box
+  :hook (company-mode . company-box-mode))
+
+(global-set-key (kbd "C-c t") 'company-complete)
 
 (use-package lispy
   :hook ((emacs-lisp-mode . lispy-mode)
@@ -187,12 +197,19 @@
 
 ;; Include .sld library definition files
 (use-package quack
-  :mode "\\.sld\\'")
-
-
-
+  :mode "\\.sld\\'"
+  :init (setq scheme-program-name "/home/jeff.gonis/Code/gauche/bin/gosh -i -r7 -I /home/jeff.gonis/Code/sicp/sicp")
+  :config (setq 'quack-programs '("/home/jeff.gonis/Code/kawa3/bin/kawa -s -r7rs" "/home/jeff.gonis/Code/gauche/bin/gosh -i -r7 -I /home/jeff.gonis/Code/sicp/sicp")))
+  
 (use-package ccls
   :hook ((c-mode c++-mode objc-mode cuda-mode) .
          (lambda () (require 'ccls) (lsp)))
   :config (setq ccls-executable "/home/jeff.gonis/Code/ccls/Release/ccls"))
+
+;; Use org package. We use the :pin argument here
+;; to force the org repository to be used instead
+;; of the build in org-mode packaged with emacs
+(use-package org
+  :ensure org-plus-contrib
+  :pin org)
 
