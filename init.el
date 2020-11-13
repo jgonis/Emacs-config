@@ -1,4 +1,4 @@
-;;Start of config
+;;start of config
 (setq inhibit-startup-message t)
 (set-fringe-mode 10)
 (tool-bar-mode -1)
@@ -183,6 +183,7 @@
   :hook (company-mode . company-box-mode))
 
 (global-set-key (kbd "C-c t") 'company-complete)
+(global-unset-key (kbd "C-M-k"))
 
 (use-package lispy
   :hook ((emacs-lisp-mode . lispy-mode)
@@ -213,3 +214,15 @@
   :ensure org-plus-contrib
   :pin org)
 
+(defun jmg/configure-eshell ()
+  ;; Save command history when commands are entered
+  (add-hook 'eshell-pre-command-hook 'eshell-save-some-history)
+  (add-hook 'eshell-output-filter-functions 'eshell-truncate-buffer)
+  (define-key eshell-mode-map (kbd "C-r") 'counsel-esh-history)
+  (setq eshell-history-size 10000
+	eshell-buffer-maximum-lines 10000
+	eshell-hist-ignoredups t
+	eshell-scroll-to-bottom-on-input t))
+
+(use-package eshell
+  :hook (eshell-first-time-mode . jmg/configure-eshell))
