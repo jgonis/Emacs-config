@@ -42,6 +42,13 @@
 (require 'use-package)
 (setq use-package-always-ensure t)
 
+;; Add auto-update functionality so that things gets updated on startup.
+(use-package auto-package-update
+  :config
+  (setq auto-package-update-delete-old-versions t)
+  (setq auto-package-update-hide-results nil)
+  (auto-package-update-maybe))
+
 ;;Allow command logging to be installed and then burn it
 ;;on everywhere
 (use-package  command-log-mode
