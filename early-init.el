@@ -1,0 +1,8 @@
+(setq gc-cons-threshold 5000000000)
+(setq byte-compile-warnings '(not obsolete))
+(setq warning-suppress-log-types '((comp) (bytecomp)))
+(setq inhibit-startup-screen t)
+(setq visible-bell 1)
+(setq frame-resize-pixelwise t)
+(tool-bar-mode -1)
+(setq ns-command-modifier 'meta)
